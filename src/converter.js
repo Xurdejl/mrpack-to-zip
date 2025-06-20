@@ -18,6 +18,12 @@ export async function downloadFromModrinthUrl(modrinthUrl, onProgress) {
   const versionIdOrSlug = urlParts[2]
 
   try {
+    const projectResponse = await fetch(`${mrApiProject}${projectIdOrSlug}`)
+    if (!projectResponse.ok) {
+      throw new Error(`Could not fetch project ${projectIdOrSlug}. Status: ${projectResponse.status}`)
+    }
+    const projectData = await projectResponse.json()
+
     let versionData;
     if (versionIdOrSlug) {
       const versionResponse = await fetch(`${mrApiProject}${projectIdOrSlug}/version/${versionIdOrSlug}`)
@@ -52,7 +58,7 @@ export async function downloadFromModrinthUrl(modrinthUrl, onProgress) {
     const result = await downloadFromUrlInternal(mrpackFile.url, onProgress)
     return {
       content: result.content,
-      filename: `${versionData.name || projectIdOrSlug}-${versionData.version_number || ''}.zip`
+      filename: `${projectData.title || projectIdOrSlug}-${versionData.version_number || versionData.name || ''}.zip`
     }
   } catch (error) {
     console.error('Error processing Modrinth URL:', error)
@@ -178,4 +184,4 @@ export async function processMrpack(data, onProgress) {
 
 export function downloadZip(content, filename) {
   saveAs(content, filename)
-} 
+}
